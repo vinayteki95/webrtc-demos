@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGNAL // 1:1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <div class="app">
+        <header class="hud-header">
+            <p class="hud-kicker">WEB RTC / MANUAL SIGNALING</p>
+            <h1 class="title">SIGNAL<span class="title-slash"> // </span>1:1<span class="caret" aria-hidden="true"></span></h1>
+            <p class="hud-status" id="hud-status">STANDBY</p>
+        </header>
+
+        <div class="layout">
+            <main class="main">
+                <!-- HOME: create / accept -->
+                <section id="view-home" class="view view--home">
+                    <div class="tabs" role="tablist" aria-label="Call mode">
+                        <button type="button" class="tab is-active" role="tab" id="tab-create" aria-selected="true" aria-controls="panel-create" data-tab="create">
+                            Create Call
+                        </button>
+                        <button type="button" class="tab" role="tab" id="tab-accept" aria-selected="false" aria-controls="panel-accept" data-tab="accept">
+                            Accept Call
+                        </button>
+                    </div>
+
+                    <div class="panels">
+                        <!-- CREATE -->
+                        <div class="panel is-active" role="tabpanel" id="panel-create" aria-labelledby="tab-create">
+                            <p class="panel-lead">You are the caller. Capture media, mint an offer, wait for the answer.</p>
+
+                            <button type="button" class="btn btn--primary btn--pulse" id="btn-start-call">
+                                <span class="btn-glow"></span>
+                                Start Call
+                            </button>
+
+                            <div class="stage" id="create-sdp-stage" hidden>
+                                <article class="sdp-card">
+                                    <div class="sdp-card__bar">
+                                        <span class="sdp-card__label">LOCAL OFFER</span>
+                                        <span class="sdp-card__type" id="create-sdp-type">—</span>
+                                        <button type="button" class="btn btn--ghost btn--sm" id="btn-copy-create" data-copy="create-sdp-code">Copy</button>
+                                    </div>
+                                    <pre class="sdp-card__pre"><code id="create-sdp-code"></code></pre>
+                                </article>
+
+                                <label class="field-label" for="create-remote-sdp">Remote answer SDP</label>
+                                <textarea class="sdp-input" id="create-remote-sdp" rows="8" placeholder="Paste the callee's JSON answer here…"></textarea>
+                                <button type="button" class="btn btn--secondary" id="btn-submit-answer">
+                                    Submit Remote SDP
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ACCEPT -->
+                        <div class="panel" role="tabpanel" id="panel-accept" aria-labelledby="tab-accept" hidden>
+                            <p class="panel-lead">You are the callee. Paste the offer, accept, then send back your answer.</p>
+
+                            <div id="accept-form">
+                                <label class="field-label" for="accept-remote-sdp">Remote offer SDP</label>
+                                <textarea class="sdp-input" id="accept-remote-sdp" rows="8" placeholder="Paste the caller's JSON offer here…"></textarea>
+                                <button type="button" class="btn btn--primary btn--pulse" id="btn-accept-call">
+                                    <span class="btn-glow"></span>
+                                    Accept Call
+                                </button>
+                            </div>
+
+                            <div class="stage" id="accept-sdp-stage" hidden>
+                                <article class="sdp-card">
+                                    <div class="sdp-card__bar">
+                                        <span class="sdp-card__label">LOCAL ANSWER</span>
+                                        <span class="sdp-card__type" id="accept-sdp-type">—</span>
+                                        <button type="button" class="btn btn--ghost btn--sm" id="btn-copy-accept" data-copy="accept-sdp-code">Copy</button>
+                                    </div>
+                                    <pre class="sdp-card__pre"><code id="accept-sdp-code"></code></pre>
+                                </article>
+                                <p class="waiting-hint">
+                                    <span class="led led--blink"></span>
+                                    Waiting for caller to apply this answer…
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- IN CALL -->
+                <section id="view-call" class="view view--call" hidden>
+                    <div class="stage-videos">
+                        <figure class="video-frame">
+                            <figcaption class="video-label">LOCAL</figcaption>
+                            <video id="video-local" autoplay playsinline muted></video>
+                            <span class="video-corner video-corner--tl"></span>
+                            <span class="video-corner video-corner--tr"></span>
+                            <span class="video-corner video-corner--bl"></span>
+                            <span class="video-corner video-corner--br"></span>
+                        </figure>
+                        <figure class="video-frame video-frame--remote">
+                            <figcaption class="video-label video-label--live">REMOTE <span class="live-badge">LIVE</span></figcaption>
+                            <video id="video-remote" autoplay playsinline></video>
+                            <span class="video-corner video-corner--tl"></span>
+                            <span class="video-corner video-corner--tr"></span>
+                            <span class="video-corner video-corner--bl"></span>
+                            <span class="video-corner video-corner--br"></span>
+                        </figure>
+                    </div>
+                    <button type="button" class="btn btn--danger btn--pulse" id="btn-hangup">
+                        Cancel Call
+                    </button>
+                </section>
+            </main>
+
+            <aside class="sidebar" aria-label="Peer connection states">
+                <h2 class="sidebar-title">PEER STATE</h2>
+
+                <div class="state-card" id="card-connection" data-state="—">
+                    <span class="led" id="led-connection"></span>
+                    <div>
+                        <p class="state-card__name">connectionState</p>
+                        <p class="state-card__value" id="state-connection">—</p>
+                    </div>
+                </div>
+
+                <div class="state-card" id="card-gathering" data-state="—">
+                    <span class="led" id="led-gathering"></span>
+                    <div>
+                        <p class="state-card__name">iceGatheringState</p>
+                        <p class="state-card__value" id="state-gathering">—</p>
+                    </div>
+                </div>
+
+                <div class="state-card" id="card-signaling" data-state="—">
+                    <span class="led" id="led-signaling"></span>
+                    <div>
+                        <p class="state-card__name">signalingState</p>
+                        <p class="state-card__value" id="state-signaling">—</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
