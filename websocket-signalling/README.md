@@ -23,7 +23,7 @@ npx --yes serve .
 
 Open the printed URL in **two tabs**. Allow camera and microphone on both.
 
-1. Copy **YOUR ID** from the callee tab header.
-2. On the caller tab, paste that ID into the peer field and click **Start Call**.
+1. On the callee tab, **Copy** **YOUR ID**.
+2. On the caller tab, paste it into **Callee client-id** and click **Start Call**.
 
-The relay only forwards JSON. It does not parse SDP or ICE.
+Incoming offers are answered automatically. The relay only forwards JSON — it does not parse SDP or ICE.

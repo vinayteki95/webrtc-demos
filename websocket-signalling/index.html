@@ -15,86 +15,32 @@
 
     <div class="app">
         <header class="hud-header">
-            <p class="hud-kicker">WEB RTC / MANUAL SIGNALING</p>
+            <p class="hud-kicker">WEB RTC / WEBSOCKET SIGNALING</p>
             <h1 class="title">SIGNAL<span class="title-slash"> // </span>1:1<span class="caret" aria-hidden="true"></span></h1>
             <p class="hud-status" id="hud-status">STANDBY</p>
-            <p class="client-id" id="client-id">client-id</p>
+            <div class="identity" title="This tab's signaling id — copy it into the other tab">
+                <span class="identity__label">YOUR ID</span>
+                <code class="identity__value" id="client-id">—</code>
+                <button type="button" class="btn btn--ghost btn--sm" id="btn-copy-id">Copy</button>
+            </div>
         </header>
 
         <div class="layout">
             <main class="main">
-                <!-- HOME: create / accept -->
                 <section id="view-home" class="view view--home">
-                    <div class="tabs" role="tablist" aria-label="Call mode">
-                        <button type="button" class="tab is-active" role="tab" id="tab-create" aria-selected="true" aria-controls="panel-create" data-tab="create">
-                            Create Call
-                        </button>
-                        <button type="button" class="tab" role="tab" id="tab-accept" aria-selected="false" aria-controls="panel-accept" data-tab="accept">
-                            Accept Call
-                        </button>
-                    </div>
+                    <p class="panel-lead">
+                        Open this page in two tabs. Copy <strong>YOUR ID</strong> from the callee tab into the field below, then Start Call. Incoming offers are answered automatically.
+                    </p>
 
-                    <div class="panels">
-                        <!-- CREATE -->
-                        <div class="panel is-active" role="tabpanel" id="panel-create" aria-labelledby="tab-create">
-                            <p class="panel-lead">You are the caller. Capture media, mint an offer, wait for the answer.</p>
+                    <label class="field-label" for="peer-id">Callee client-id</label>
+                    <input class="id-input" id="peer-id" type="text" autocomplete="off" spellcheck="false" placeholder="Paste the other tab’s YOUR ID">
 
-                            <textarea class="sdp-input" id="peer-id" rows="2" placeholder="Paste the callee's JSON answer here…"></textarea>
-                            <button type="button" class="btn btn--primary btn--pulse" id="btn-start-call">
-                                <span class="btn-glow"></span>
-                                Start Call
-                            </button>
-
-                            <!-- <div class="stage" id="create-sdp-stage" hidden>
-                                <article class="sdp-card">
-                                    <div class="sdp-card__bar">
-                                        <span class="sdp-card__label">LOCAL OFFER</span>
-                                        <span class="sdp-card__type" id="create-sdp-type">—</span>
-                                        <button type="button" class="btn btn--ghost btn--sm" id="btn-copy-create" data-copy="create-sdp-code">Copy</button>
-                                    </div>
-                                    <pre class="sdp-card__pre"><code id="create-sdp-code"></code></pre>
-                                </article>
-
-                                <label class="field-label" for="create-remote-sdp">Remote answer SDP</label>
-                                <textarea class="sdp-input" id="create-remote-sdp" rows="8" placeholder="Paste the callee's JSON answer here…"></textarea>
-                                <button type="button" class="btn btn--secondary" id="btn-submit-answer">
-                                    Submit Remote SDP
-                                </button>
-                            </div> -->
-                        </div>
-
-                        <!-- ACCEPT -->
-                        <div class="panel" role="tabpanel" id="panel-accept" aria-labelledby="tab-accept" hidden>
-                            <p class="panel-lead">You are the callee. Paste the offer, accept, then send back your answer.</p>
-
-                            <div id="accept-form">
-                                <label class="field-label" for="accept-remote-sdp">Remote offer SDP</label>
-                                <textarea class="sdp-input" id="accept-remote-sdp" rows="8" placeholder="Paste the caller's JSON offer here…"></textarea>
-                                <button type="button" class="btn btn--primary btn--pulse" id="btn-accept-call">
-                                    <span class="btn-glow"></span>
-                                    Accept Call
-                                </button>
-                            </div>
-
-                            <div class="stage" id="accept-sdp-stage" hidden>
-                                <article class="sdp-card">
-                                    <div class="sdp-card__bar">
-                                        <span class="sdp-card__label">LOCAL ANSWER</span>
-                                        <span class="sdp-card__type" id="accept-sdp-type">—</span>
-                                        <button type="button" class="btn btn--ghost btn--sm" id="btn-copy-accept" data-copy="accept-sdp-code">Copy</button>
-                                    </div>
-                                    <pre class="sdp-card__pre"><code id="accept-sdp-code"></code></pre>
-                                </article>
-                                <p class="waiting-hint">
-                                    <span class="led led--blink"></span>
-                                    Waiting for caller to apply this answer…
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <button type="button" class="btn btn--primary btn--pulse" id="btn-start-call">
+                        <span class="btn-glow"></span>
+                        Start Call
+                    </button>
                 </section>
 
-                <!-- IN CALL -->
                 <section id="view-call" class="view view--call" hidden>
                     <div class="stage-videos">
                         <figure class="video-frame">
@@ -124,7 +70,7 @@
                 <h2 class="sidebar-title">PEER STATE</h2>
 
                 <div class="state-card" id="card-connection" data-state="—">
-                    <span class="led" id="led-connection"></span>
+                    <span class="led"></span>
                     <div>
                         <p class="state-card__name">connectionState</p>
                         <p class="state-card__value" id="state-connection">—</p>
@@ -132,7 +78,7 @@
                 </div>
 
                 <div class="state-card" id="card-gathering" data-state="—">
-                    <span class="led" id="led-gathering"></span>
+                    <span class="led"></span>
                     <div>
                         <p class="state-card__name">iceGatheringState</p>
                         <p class="state-card__value" id="state-gathering">—</p>
@@ -140,7 +86,7 @@
                 </div>
 
                 <div class="state-card" id="card-signaling" data-state="—">
-                    <span class="led" id="led-signaling"></span>
+                    <span class="led"></span>
                     <div>
                         <p class="state-card__name">signalingState</p>
                         <p class="state-card__value" id="state-signaling">—</p>

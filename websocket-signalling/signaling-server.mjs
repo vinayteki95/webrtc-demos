@@ -1,47 +1,41 @@
-import { WebSocketServer } from 'ws';
-// The Phone Call Model
+import { WebSocketServer } from "ws";
 
-const wsServer = new WebSocketServer({ port: 8080 });
-// const internalClientMap = new Map();
+const wss = new WebSocketServer({ port: 8080 });
 const clients = new Map();
-const clientsReverseMap = new Map();
+const socketToId = new Map();
 
-wsServer.on('connection', (ws, request) => {
+wss.on("connection", (ws, request) => {
+    console.log("client connected", request.socket.remoteAddress);
 
-    // const clientId = crypto.randomUUID();
-    console.log('signaling server client connected');
-    // internalClientMap.set(ws, clientId);
+    ws.on("message", (raw) => {
+        const msg = JSON.parse(raw.toString());
 
-    ws.on('message', (message) => {
-        const parsedMessage = JSON.parse(message);
-        console.log('signaling server received message:', parsedMessage);
-
-        if (parsedMessage.type === 'register') {
-            clients.set(parsedMessage.id, ws);
-            clientsReverseMap.set(ws, parsedMessage.id);
-            console.log(`Client ${parsedMessage.id} connected from ${request.socket.remoteAddress}`);
-        } else {
-            if (!clients.has(parsedMessage.to)) {
-                clients.get(parsedMessage.from).send(JSON.stringify({ type: 'wsserror', message: 'recipient not connected/registered to the server' }));
-                return;
-            } else {
-                clients.get(parsedMessage.to).send(JSON.stringify(parsedMessage));
-            }
+        if (msg.type === "register") {
+            clients.set(msg.id, ws);
+            socketToId.set(ws, msg.id);
+            console.log("registered", msg.id);
+            return;
         }
 
+        const dest = clients.get(msg.to);
+        if (!dest) {
+            const from = clients.get(msg.from);
+            from?.send(JSON.stringify({
+                type: "wsserror",
+                message: "recipient not connected/registered",
+            }));
+            return;
+        }
+
+        dest.send(JSON.stringify(msg));
     });
 
-    ws.on('error', (error) => {
-        console.error('WebSocket error:', error);
-    });
-
-    ws.on('close', () => {
-        // clients.delete(internalClientMap.get(ws));
-        // internalClientMap.delete(ws);
-        const clientId = clientsReverseMap.get(ws);
-        clients.delete(clientId);
-        clientsReverseMap.delete(ws);
-        console.log(`Client ${clientId} disconnected from ${request.socket.remoteAddress}`);
+    ws.on("close", () => {
+        const id = socketToId.get(ws);
+        if (id) clients.delete(id);
+        socketToId.delete(ws);
+        console.log("disconnected", id);
     });
 });
 
+console.log("signaling relay on ws://localhost:8080");
